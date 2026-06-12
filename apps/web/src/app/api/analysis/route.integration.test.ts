@@ -45,6 +45,7 @@ describe.skipIf(!shouldRun)("POST /api/analysis integration", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           channel: "slack",
+          organizationSlug: "demo-co",
           requester: "ops-lead",
           question: "Show revenue by month",
           semanticProfile: "saas"
