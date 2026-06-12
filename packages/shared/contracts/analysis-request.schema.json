@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnalysisRequest",
+  "type": "object",
+  "required": ["channel", "requester", "question", "semanticProfile"],
+  "properties": {
+    "channel": { "type": "string", "enum": ["slack", "api", "webhook"] },
+    "requester": { "type": "string", "minLength": 1 },
+    "question": { "type": "string", "minLength": 1 },
+    "semanticProfile": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}
+
