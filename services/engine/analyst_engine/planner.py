@@ -13,6 +13,8 @@ class QueryPlan:
 
 
 def plan_query(question: str, organization_id: int) -> QueryPlan:
+    # Enforce int type at the planner boundary so SQL interpolation is safe by construction.
+    org_id = int(organization_id)
     resolution = resolve_question(question)
     if resolution.intent == "monthly_revenue":
         return QueryPlan(
@@ -21,7 +23,7 @@ def plan_query(question: str, organization_id: int) -> QueryPlan:
             sql=(
                 "SELECT order_month, SUM(revenue_cents) AS revenue_cents "
                 "FROM analytics_orders "
-                f"WHERE organization_id = {organization_id} "
+                f"WHERE organization_id = {org_id} "
                 "GROUP BY order_month "
                 "ORDER BY order_month "
                 "LIMIT 12"
@@ -36,7 +38,7 @@ def plan_query(question: str, organization_id: int) -> QueryPlan:
             sql=(
                 "SELECT status, COUNT(*) AS customer_count "
                 "FROM analytics_customers "
-                f"WHERE organization_id = {organization_id} "
+                f"WHERE organization_id = {org_id} "
                 "GROUP BY status "
                 "ORDER BY status "
                 "LIMIT 10"

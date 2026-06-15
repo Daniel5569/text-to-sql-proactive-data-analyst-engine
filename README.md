@@ -3,10 +3,11 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-blue.svg)
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.11-blue.svg)
+[![CI](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml)
 
 Production-shaped portfolio case study for AI-native teams building proactive business analysts, Slack data agents, and safe text-to-SQL systems over relational data.
 
-The monorepo demonstrates a bicephalous Node.js + Python architecture:
+The monorepo demonstrates a two-runtime Node.js + Python architecture:
 
 - **Node.js / Next.js** owns event ingestion, MCP-style tool metadata, request persistence, and Redis Stream dispatch.
 - **Python / FastAPI** owns semantic resolution, SQL planning, read-only validation, sandbox execution, and chart payload generation.

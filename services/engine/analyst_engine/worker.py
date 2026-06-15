@@ -1,4 +1,6 @@
+import asyncio
 import json
+import logging
 from typing import Any
 
 from redis.asyncio import Redis
@@ -9,6 +11,8 @@ from .config import settings
 from .db import database
 from .planner import plan_query
 from .validator import validate_sql
+
+logger = logging.getLogger(__name__)
 
 STREAM_KEY = "analysis-requests"
 DEAD_LETTER_STREAM = "analysis-requests-dead-letter"
@@ -168,12 +172,18 @@ async def consume_once(redis: Redis) -> bool:
 
 
 async def worker_loop() -> None:
-    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    # socket_timeout must exceed the XREADGROUP block duration (5 s) so the
+    # client-side read timeout doesn't race with Redis's server-side block.
+    redis = Redis.from_url(settings.redis_url, decode_responses=True, socket_timeout=10)
     try:
         await ensure_consumer_group(redis)
         while True:
-            consumed = await consume_once(redis)
-            if not consumed:
-                await reclaim_stale_pending(redis)
+            try:
+                consumed = await consume_once(redis)
+                if not consumed:
+                    await reclaim_stale_pending(redis)
+            except Exception:
+                logger.exception("worker_loop iteration failed, retrying in 1s")
+                await asyncio.sleep(1)
     finally:
         await redis.aclose()

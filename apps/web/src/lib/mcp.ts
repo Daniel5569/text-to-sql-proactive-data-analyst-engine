@@ -12,9 +12,10 @@ export function getMcpTools(): McpTool[] {
         "Submit a natural-language business question for asynchronous semantic-layer SQL analysis.",
       inputSchema: {
         type: "object",
-        required: ["channel", "requester", "question", "semanticProfile"],
+        required: ["channel", "organizationSlug", "requester", "question", "semanticProfile"],
         properties: {
           channel: { type: "string", enum: ["slack", "api", "webhook"] },
+          organizationSlug: { type: "string" },
           requester: { type: "string" },
           question: { type: "string" },
           semanticProfile: { type: "string" }

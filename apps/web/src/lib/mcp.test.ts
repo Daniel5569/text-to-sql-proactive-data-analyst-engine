@@ -8,7 +8,7 @@ describe("MCP tool registry", () => {
     expect(tools.map((tool) => tool.name)).toEqual(["submit_analysis_request", "get_analysis_status"]);
     expect(tools[0].inputSchema).toMatchObject({
       type: "object",
-      required: ["channel", "requester", "question", "semanticProfile"]
+      required: ["channel", "organizationSlug", "requester", "question", "semanticProfile"]
     });
   });
 });

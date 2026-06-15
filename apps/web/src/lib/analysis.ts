@@ -30,9 +30,10 @@ export async function createAnalysisRequest(input: CreateAnalysisInput) {
     throw new Error("organization_not_seeded");
   }
 
-  await pool.query("BEGIN");
+  const client = await pool.connect();
   try {
-    await pool.query(
+    await client.query("BEGIN");
+    await client.query(
       `INSERT INTO analysis_requests
         (id, organization_id, channel, requester, question, semantic_profile, status)
        VALUES ($1, $2, $3, $4, $5, $6, 'queued')`,
@@ -45,7 +46,7 @@ export async function createAnalysisRequest(input: CreateAnalysisInput) {
         input.semanticProfile
       ]
     );
-    await pool.query(
+    await client.query(
       `INSERT INTO audit_events (analysis_request_id, event_type, payload_json)
        VALUES ($1, 'analysis.accepted', $2)`,
       [
@@ -58,10 +59,12 @@ export async function createAnalysisRequest(input: CreateAnalysisInput) {
         })
       ]
     );
-    await pool.query("COMMIT");
+    await client.query("COMMIT");
   } catch (error) {
-    await pool.query("ROLLBACK");
+    await client.query("ROLLBACK");
     throw error;
+  } finally {
+    client.release();
   }
 
   try {

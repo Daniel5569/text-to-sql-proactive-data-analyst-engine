@@ -9,6 +9,7 @@ ANALYSIS_RESPONSE="$(
     -H "content-type: application/json" \
     -d '{
       "channel": "slack",
+      "organizationSlug": "demo-co",
       "requester": "ops-lead",
       "question": "Show revenue by month for the last quarter",
       "semanticProfile": "saas"

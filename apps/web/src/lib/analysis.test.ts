@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const mockClient = {
+  query: vi.fn(async () => ({ rows: [] })),
+  release: vi.fn()
+};
+
 vi.mock("./db", () => ({
   pool: {
     query: vi.fn(async (sql: string) => {
@@ -7,7 +12,8 @@ vi.mock("./db", () => ({
         return { rows: [{ id: "1" }] };
       }
       return { rows: [] };
-    })
+    }),
+    connect: vi.fn(async () => mockClient)
   }
 }));
 
@@ -30,6 +36,8 @@ const input = {
 describe("analysis admission", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockClient.query.mockResolvedValue({ rows: [] });
+    mockClient.release.mockReset();
   });
 
   it("persists request state and enqueues async analysis", async () => {
@@ -43,8 +51,9 @@ describe("analysis admission", () => {
         semanticProfile: "saas"
       })
     );
-    expect(pool.query).toHaveBeenCalledWith("BEGIN");
-    expect(pool.query).toHaveBeenCalledWith("COMMIT");
+    expect(mockClient.query).toHaveBeenCalledWith("BEGIN");
+    expect(mockClient.query).toHaveBeenCalledWith("COMMIT");
+    expect(mockClient.release).toHaveBeenCalled();
   });
 
   it("marks request failed when Redis stream admission fails", async () => {
