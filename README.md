@@ -1,9 +1,11 @@
 # Text-to-SQL Proactive Data Analyst Engine
 
+[![CI](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-blue.svg)
 ![Python](https://img.shields.io/badge/python-%E2%89%A53.11-blue.svg)
-[![CI](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine/actions/workflows/ci.yml)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Daniel5569/text-to-sql-proactive-data-analyst-engine&root-directory=apps/web)
 
 Production-shaped portfolio case study for AI-native teams building proactive business analysts, Slack data agents, and safe text-to-SQL systems over relational data.
 
