@@ -250,3 +250,24 @@ Requests now carry an explicit `organizationSlug`, and the SQL validator rejects
 ## Context
 
 Safe data agents require infrastructure judgment: semantic governance, asynchronous channel workflows, read-only query execution, parser-backed validation, audit logs, and CI-tested behavior. The implementation is intentionally inspectable so the control-plane decisions can be reviewed directly.
+
+
+## Architecture Decisions
+
+**Why a semantic layer instead of sending the raw schema to the model?**
+A raw schema leaks table names, column names, and relationships that should never reach the model — salaries, user PII tables, internal pricing. The semantic layer is a curated, company-controlled vocabulary: `MRR` maps to a governed metric definition; `revenue` maps to a specific column in a specific table. The model works in business language; the layer translates to SQL. This also makes the system unit-testable: governed definitions are deterministic, not probabilistic.
+
+**Why Redis Streams instead of a synchronous API call to the Python engine?**
+A text-to-SQL query involves semantic resolution, SQL planning, and sandbox execution — potentially hundreds of milliseconds to several seconds. Holding the HTTP connection open makes the gateway brittle under load. The gateway returns `202 Accepted`, the Python engine processes asynchronously, and the status is polled via the control-plane API. This is the same pattern used by production data agent systems.
+
+**Why Python for SQL validation and not TypeScript?**
+Python has first-class SQL parsing libraries (sqlparse, sqlglot) that decompose a query into an AST without executing it. Write-rejection and sensitive-table checks run against the AST — there is no regex that reliably blocks all forms of `DELETE`. Python also owns the read-only sandbox execution, keeping the dangerous step isolated from the gateway.
+
+**What does "read-only sandbox" mean exactly?**
+Every query executes inside `BEGIN; ... ROLLBACK`. Even if a query somehow passed validation with a write statement, the transaction is rolled back before it commits. Parser validation is the first line of defense; the sandbox transaction is the second.
+
+**Why is the semantic layer stored in PostgreSQL and not config files?**
+Business definitions change — a new metric is added, a table is renamed. A hardcoded schema means a re-deploy every time a definition changes. Storing governed definitions in PostgreSQL means a data analyst can add a new metric without touching application code or triggering a deployment.
+
+**Why dead-letter instead of returning an error to the user?**
+Every query that fails validation — `WRITE_NOT_ALLOWED`, `UNMAPPED_METRIC`, `SYNTAX_ERROR`, `TIMEOUT` — is written to a dead-letter stream with a structured error code. Silent failures are invisible to operators. Dead-letter queues let a data team see exactly what users tried to ask and which validation gate blocked them, which informs semantic layer improvements over time.
