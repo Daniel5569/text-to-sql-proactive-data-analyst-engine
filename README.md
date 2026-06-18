@@ -9,6 +9,52 @@
 
 Production-shaped portfolio case study for AI-native teams building proactive business analysts, Slack data agents, and safe text-to-SQL systems over relational data.
 
+## What "proactive" means
+
+Most text-to-SQL systems are reactive: a user asks a question and the system responds. This engine is designed for **proactive** data analyst workflows — it can be triggered by scheduled jobs, Slack events, or upstream pipeline signals, and it delivers results asynchronously. The analyst does not wait at a prompt; the system works in the background and surfaces answers through existing channels (Slack, dashboard, email).
+
+The control flow is: event admission → `202 Accepted` → Redis Stream dispatch → semantic planning → SQL validation → sandbox execution → chart generation. The user never blocks on a synchronous query.
+
+## SQL Safety — the core differentiator
+
+Most text-to-SQL systems generate and execute arbitrary SQL. This is unsafe in production: generated queries can read sensitive tables, run expensive full scans, or — if the system has write access — mutate data.
+
+This engine enforces safety at the Python layer before any query runs:
+
+| Check | What it blocks |
+|-------|---------------|
+| **Semantic layer** | Queries that reference tables or columns outside governed definitions |
+| **Parser-backed validation** | Malformed SQL and any statement that is not a `SELECT` |
+| **Write rejection** | `INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER` — all rejected |
+| **Sensitive table blocklist** | Configurable list of tables that must never be queried |
+| **Read-only sandbox** | All queries execute inside a `BEGIN; ... ROLLBACK` transaction |
+| **Query timeout** | Configurable wall-clock limit; long-running queries are killed |
+
+Queries that fail any check are dead-lettered with a structured error code — never silently dropped.
+
+## Example queries
+
+```
+User: "Show me MRR for Q2 by customer tier"
+→ Semantic layer maps "MRR" → governed metric definition
+→ Python generates: SELECT tier, SUM(mrr) FROM analytics.subscriptions
+                    WHERE quarter = 'Q2-2026' GROUP BY tier
+→ Validator: SELECT only, governed tables only, no sensitive columns ✓
+→ Executes in read-only sandbox → returns chart payload
+```
+
+```
+User: "Delete all test accounts"
+→ Python validator: DELETE statement → blocked immediately
+→ Error: WRITE_NOT_ALLOWED — returned as structured dead-letter
+```
+
+```
+User: "Show me salaries"
+→ Semantic layer: 'salaries' not in governed definitions
+→ Error: UNMAPPED_METRIC — query never reaches the database
+```
+
 The monorepo demonstrates a two-runtime Node.js + Python architecture:
 
 - **Node.js / Next.js** owns event ingestion, MCP-style tool metadata, request persistence, and Redis Stream dispatch.
