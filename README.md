@@ -71,7 +71,6 @@ This project treats text-to-SQL as infrastructure: a controlled request pipeline
 
 ## Demo
 
-![Analyst request lifecycle demo](docs/demo.gif)
 
 The demo shows a Slack-style event entering the gateway, a `202 Accepted` response, Redis Stream dispatch, Python semantic planning, read-only SQL validation, and a chart-ready payload.
 
